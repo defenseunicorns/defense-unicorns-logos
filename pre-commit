@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Function to generate the table of contents with hyperlinked thumbnails
+generate_table_of_contents() {
+    echo "## Graphics"
+
+    # Find all unique directories
+    find . -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.gif" -o -iname "*.svg" \) -exec dirname {} \; | sort -u | while read -r directory; do
+        echo "<details>"
+        echo "<summary>$directory</summary>"
+        echo ""
+        echo "| Thumbnail | Image |"
+        echo "| --------- | ----- |"
+
+        # Find image files in the current directory
+        find "$directory" -maxdepth 1 -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.gif" -o -iname "*.svg" \) | sort | while read -r image_file; do
+            image_filename=$(basename "$image_file")
+            image_extension="${image_filename##*.}"
+
+            echo "| <img src=\"$image_file\" alt=\"$image_filename\" width=\"100\"> | [$image_filename]($image_file) |"
+        done
+
+        echo "</details>"
+        echo ""
+    done
+}
+
+# Generate the table of contents and store it in a temporary file
+generate_table_of_contents > tmp_readme.md
+
+# Add instructions at the end of the file
+cat >> tmp_readme.md << EOF
+
+### How to use the pre-commit hook
+
+<details>
+
+Note: If you make any changes to the pre-commit script, be sure to commit and push the changes to the repository so that other contributors can benefit from the updated functionality.
+
+1. Run the following command to set up the pre-commit hook:
+   \`\`\`bash
+   cp pre-commit .git/hooks/pre-commit
+   \`\`\`
+
+2. Make the pre-commit script executable by running the following command in the root of your local clone:
+   \`\`\`bash
+   chmod +x .git/hooks/pre-commit
+   \`\`\`
+
+3. Now, whenever you make a commit, the pre-commit hook will automatically generate the README.md file with Graphics lists including thumbnails.
+
+</details>
+
+EOF
+
+# Replace README.md with the updated content
+mv tmp_readme.md README.md
